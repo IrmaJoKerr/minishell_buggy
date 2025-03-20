@@ -6,7 +6,7 @@
 /*   By: bleow <bleow@student.42kl.edu.my>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/01 21:13:52 by bleow             #+#    #+#             */
-/*   Updated: 2025/03/20 06:27:41 by bleow            ###   ########.fr       */
+/*   Updated: 2025/03/20 16:31:29 by bleow            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,7 +82,7 @@ Example: For '|' character
 - Returns TYPE_PIPE enum value
 - Allows consistent token type assignment
 Used with handle_single_operator().
-*/
+OLD VERSION
 t_tokentype	get_operator_type(char op)
 {
 	if (op == '|')
@@ -92,6 +92,19 @@ t_tokentype	get_operator_type(char op)
 	else if (op == '<')
 		return (TYPE_IN_REDIRECT);
 	return (TYPE_STRING);
+}
+*/
+t_tokentype	get_operator_type(char op)
+{
+    if (op == '|')
+        return (TYPE_PIPE);
+    else if (op == '>')
+        return (TYPE_OUT_REDIRECT);
+    else if (op == '<')
+        return (TYPE_IN_REDIRECT);
+    else if (op == '$')
+        return (TYPE_EXPANSION);
+    return (TYPE_STRING);
 }
 
 /*
@@ -133,7 +146,7 @@ int	handle_single_operator(char *input, int i, t_vars *vars)
     
     return (i + 1);
 }
-*/
+NEWER OLD VERSION
 int handle_single_operator(char *input, int i, t_vars *vars)
 {
     if (i > vars->start)
@@ -155,6 +168,48 @@ int handle_single_operator(char *input, int i, t_vars *vars)
             
     return (i + 1);
 }
+*/
+int handle_single_operator(char *input, int i, t_vars *vars)
+{
+    char *token;
+    
+    fprintf(stderr, "DEBUG: handle_single_operator called at pos %d with char '%c'\n", 
+            i, input[i]);
+            
+    // Create token for preceding text if needed
+    if (i > vars->start)
+    {
+        handle_string(input, i, vars->start, vars);
+        vars->start = i;
+    }
+    
+    // Create token for operator
+    token = ft_substr(input, i, 1);
+    if (!token)
+        return (i);
+    
+    // Explicitly determine operator type
+    if (input[i] == '|')
+    {
+        vars->curr_type = TYPE_PIPE;
+        fprintf(stderr, "DEBUG: Setting pipe operator type to TYPE_PIPE\n");
+    }
+    else if (input[i] == '>')
+        vars->curr_type = TYPE_OUT_REDIRECT;
+    else if (input[i] == '<')
+        vars->curr_type = TYPE_IN_REDIRECT;
+    else
+        vars->curr_type = TYPE_STRING;
+    
+    fprintf(stderr, "DEBUG: Creating operator token '%s' with type %d\n", 
+            token, vars->curr_type);
+    
+    maketoken(token, vars);
+    ft_safefree((void **)&token);
+    
+    vars->start = i + 1;
+    return (i + 1);
+}
 
 /*
 Processes two-character operators (>>, <<).
@@ -170,7 +225,7 @@ Example: For ">>" in input
 - Creates TYPE_APPEND_REDIRECT token
 - Updates position to skip both characters
 - Returns position after ">>"
-*/
+OLD VERSION
 int	handle_double_operator(char *input, int i, t_vars *vars)
 {
 	if (input[i] == '>' && input[i + 1] == '>')
@@ -190,4 +245,65 @@ int	handle_double_operator(char *input, int i, t_vars *vars)
 		return (i + 2);
 	}
 	return (i);
+}
+*/
+int	handle_double_operator(char *input, int i, t_vars *vars)
+{
+    char	*token;
+    
+    fprintf(stderr, "DEBUG: handle_double_operator at pos %d with chars '%c%c'\n", 
+            i, input[i], input[i + 1]);
+            
+    // Handle text before the operator if any
+    if (i > vars->start)
+    {
+        handle_string(input, i, vars->start, vars);
+        vars->start = i;
+    }
+    
+    token = ft_substr(input, i, 2);
+    if (!token)
+        return (i);
+        
+    // Set correct token type based on the operator
+    if (input[i] == '>' && input[i + 1] == '>')
+        vars->curr_type = TYPE_APPEND_REDIRECT;
+    else if (input[i] == '<' && input[i + 1] == '<')
+        vars->curr_type = TYPE_HEREDOC;
+    else
+        vars->curr_type = TYPE_STRING;
+        
+    fprintf(stderr, "DEBUG: Double operator '%s' classified as type %d\n", 
+            token, vars->curr_type);
+            
+    maketoken(token, vars);
+    ft_safefree((void **)&token);
+    
+    vars->start = i + 2;
+    return (i + 2);
+}
+
+/*
+Checks for double operators (>> or <<)
+Returns 1 if found, 0 otherwise.
+*/
+int	is_double_operator(char *input, int i)
+{
+    if (!input || !input[i] || !input[i + 1])
+        return (0);
+    if ((input[i] == '>' && input[i + 1] == '>') || 
+        (input[i] == '<' && input[i + 1] == '<'))
+        return (1);
+    return (0);
+}
+
+/*
+Checks if a character is an operator (|, >, <)
+Returns 1 if it is, 0 otherwise.
+*/
+int	is_operator(char c)
+{
+    if (c == '|' || c == '>' || c == '<')
+        return (1);
+    return (0);
 }

@@ -6,7 +6,7 @@
 /*   By: bleow <bleow@student.42kl.edu.my>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/02 06:12:16 by bleow             #+#    #+#             */
-/*   Updated: 2025/03/20 06:23:02 by bleow            ###   ########.fr       */
+/*   Updated: 2025/03/20 16:30:00 by bleow            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ Creates a token based on the current token type.
 - For other tokens, creates appropriate node type.
 - Updates token linked list.
 Works with process_text().
-*/
+OLD VERSION
 void maketoken(char *token, t_vars *vars)
 {
     fprintf(stderr, "DEBUG: maketoken called with token='%s', type=%d\n", 
@@ -57,6 +57,114 @@ void maketoken(char *token, t_vars *vars)
                 vars->current->type, 
                 (vars->current->args && vars->current->args[0]) ? 
                     vars->current->args[0] : "(null)");
+}
+*/
+// Implement or modify maketoken in tokenize.c
+void maketoken(char *token, t_vars *vars)
+{
+    t_node *node = NULL;
+    
+    fprintf(stderr, "DEBUG: maketoken called with token='%s', type=%d\n", 
+            token, vars->curr_type);
+    
+    // For arguments, append to previous command node
+    if (vars->curr_type == TYPE_ARGS && vars->head)
+    {
+        t_node *cmd_node = find_last_command(vars->head);
+        
+        if (cmd_node)
+        {
+            fprintf(stderr, "DEBUG: Adding argument '%s' to command '%s'\n",
+                    token, cmd_node->args ? cmd_node->args[0] : "(null)");
+            append_arg(cmd_node, token);
+            return;
+        }
+    }
+    
+    // For strings that should be considered arguments to the previous command
+    if (vars->curr_type == TYPE_STRING && vars->current && vars->current->type == TYPE_CMD)
+    {
+        fprintf(stderr, "DEBUG: Converting string '%s' to argument for command '%s'\n",
+                token, vars->current->args ? vars->current->args[0] : "(null)");
+        append_arg(vars->current, token);
+        return;
+    }
+    
+    // For command tokens
+    if (vars->curr_type == TYPE_CMD)
+    {
+        fprintf(stderr, "DEBUG: Command token processed: '%s'\n", token);
+        node = new_cmd_node(token);
+    }
+    // For pipe tokens
+    else if (vars->curr_type == TYPE_PIPE)
+    {
+        fprintf(stderr, "DEBUG: Pipe token processed\n");
+        node = new_other_node(token, TYPE_PIPE);
+    }
+    // For other tokens
+    else
+    {
+        fprintf(stderr, "DEBUG: Other token processed: '%s', type=%d\n", 
+                token, vars->curr_type);
+        
+        // For strings after a pipe, convert to commands
+        if (vars->curr_type == TYPE_STRING && 
+            vars->current && vars->current->type == TYPE_PIPE)
+        {
+            fprintf(stderr, "DEBUG: Converting string after pipe to command\n");
+            vars->curr_type = TYPE_CMD;
+            node = new_cmd_node(token);
+        }
+        else
+        {
+            // Create other token types
+            node = new_other_node(token, vars->curr_type);
+        }
+    }
+    
+    // Add node to list
+    if (node)
+    {
+        if (!vars->head)
+        {
+            vars->head = node;
+            vars->current = node;
+            fprintf(stderr, "DEBUG: Set head token: type=%d, value='%s'\n", 
+                    node->type, token);
+        }
+        else
+        {
+            vars->current->next = node;
+            node->prev = vars->current;
+            vars->current = node;
+            fprintf(stderr, "DEBUG: Added token to list: type=%d, value='%s'\n", 
+                    node->type, token);
+        }
+        
+        fprintf(stderr, "DEBUG: New token added: type=%d, value='%s'\n", 
+                vars->curr_type, token);
+    }
+    else
+    {
+        fprintf(stderr, "DEBUG: Failed to create token for '%s'\n", token);
+    }
+}
+
+// Helper function to find the last command node
+t_node *find_last_command(t_node *head)
+{
+    t_node *current = head;
+    t_node *last_cmd = NULL;
+    
+    while (current)
+    {
+        if (current->type == TYPE_CMD)
+            last_cmd = current;
+        current = current->next;
+    }
+    
+    return last_cmd;
 }
 
 /*
@@ -455,7 +563,7 @@ Processes a non-command token during tokenization.
 - For argument tokens, appends to the previous command.
 - For other tokens, adds as a new node in the list.
 Works with maketoken().
-*/
+OLD VERSION
 void process_other_token(char *token, t_vars *vars)
 {
     int created_node;
@@ -482,6 +590,51 @@ void process_other_token(char *token, t_vars *vars)
     
     fprintf(stderr, "DEBUG: Token processed: type=%d, value=%s\n", 
             vars->curr_type, token);
+}
+*/
+void process_other_token(char *token, t_vars *vars)
+{
+    t_node *node = NULL;
+    
+    fprintf(stderr, "DEBUG: process_other_token called with token='%s', type=%d\n", 
+            token, vars->curr_type);
+            
+    if (!token || !vars)
+        return;
+    
+    // For pipe tokens, ensure proper type is set
+    if (strcmp(token, "|") == 0)
+    {
+        fprintf(stderr, "DEBUG: Forcing pipe token type to TYPE_PIPE\n");
+        vars->curr_type = TYPE_PIPE;
+    }
+    
+    // Create the appropriate node
+    node = new_other_node(token, vars->curr_type);
+    if (!node)
+    {
+        fprintf(stderr, "DEBUG: Failed to create node for token '%s'\n", token);
+        return;
+    }
+    
+    // Add to token list
+    if (!vars->head)
+    {
+        vars->head = node;
+        vars->current = node;
+        fprintf(stderr, "DEBUG: Set head token: type=%d, value='%s'\n", 
+                node->type, token);
+    }
+    else
+    {
+        vars->current->next = node;
+        node->prev = vars->current;
+        vars->current = node;
+        fprintf(stderr, "DEBUG: Added token to list: type=%d, value='%s'\n", 
+                node->type, token);
+    }
+    
+    fprintf(stderr, "DEBUG: Other token node created: type=%d\n", node->type);
 }
 
 /*

@@ -6,7 +6,7 @@
 /*   By: bleow <bleow@student.42kl.edu.my>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/13 15:17:46 by bleow             #+#    #+#             */
-/*   Updated: 2025/03/20 06:00:25 by bleow            ###   ########.fr       */
+/*   Updated: 2025/03/20 16:12:42 by bleow            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -120,44 +120,57 @@ void	process_text(char *str, t_vars *vars, int *first_token,
     vars->start = vars->pos;
 }
 */
+// Add this to your tokenize.c or wherever your process_text function is located
 void process_text(char *str, t_vars *vars, int *first_token, t_tokentype override_type)
 {
     char *token;
-    int len;
-    
-    len = vars->pos - vars->start;
-    fprintf(stderr, "DEBUG: process_text: len=%d, text='%.*s', first_token=%d\n", 
-            len, len, str + vars->start, *first_token);
+    int len = vars->pos - vars->start;
     
     if (len <= 0)
         return;
-        
+    
     token = ft_substr(str, vars->start, len);
     if (!token)
         return;
     
-    fprintf(stderr, "DEBUG: process_text: extracted token='%s'\n", token);
+    fprintf(stderr, "DEBUG: process_text: len=%d, text='%s', first_token=%d\n", 
+            len, token, *first_token);
     
-    // Debug token classification logic
-    if (!*first_token && vars->current != NULL && vars->current->type == TYPE_CMD)
-    {
-        fprintf(stderr, "DEBUG: Classifying as argument to command '%s'\n", 
-                vars->current->args ? vars->current->args[0] : "(null)");
-        vars->curr_type = TYPE_ARGS;
-    }
-    else if (*first_token && override_type == TYPE_NULL)
+    // If this is the first token, it's a command
+    if (*first_token)
     {
         fprintf(stderr, "DEBUG: Classifying as command\n");
         vars->curr_type = TYPE_CMD;
         *first_token = 0;
     }
+    // If override_type is provided, use it
+    else if (override_type != TYPE_NULL)
+    {
+        fprintf(stderr, "DEBUG: Using override type %d\n", override_type);
+        vars->curr_type = override_type;
+    }
+    // Otherwise, if token starts with '-', it's an argument to previous command
+    else if (token[0] == '-')
+    {
+        fprintf(stderr, "DEBUG: Classifying as argument to command '%s'\n", 
+                vars->head ? vars->head->args[0] : "unknown");
+        vars->curr_type = TYPE_ARGS;
+    }
+    // For all other cases, determine based on context
     else
     {
-        fprintf(stderr, "DEBUG: Classifying as %s\n", 
-                override_type != TYPE_NULL ? "override" : "STRING");
-        vars->curr_type = override_type != TYPE_NULL ? override_type : TYPE_STRING;
+        fprintf(stderr, "DEBUG: Classifying as STRING\n");
+        vars->curr_type = TYPE_STRING;
+        
+        // After a pipe, the next string is likely a command
+        if (vars->current && vars->current->type == TYPE_PIPE)
+        {
+            fprintf(stderr, "DEBUG: Reclassifying after pipe as CMD\n");
+            vars->curr_type = TYPE_CMD;
+        }
     }
     
+    fprintf(stderr, "DEBUG: process_text: extracted token='%s'\n", token);
     maketoken(token, vars);
     ft_safefree((void **)&token);
 }

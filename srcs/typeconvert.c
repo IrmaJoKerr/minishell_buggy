@@ -6,7 +6,7 @@
 /*   By: bleow <bleow@student.42kl.edu.my>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/13 16:51:38 by bleow             #+#    #+#             */
-/*   Updated: 2025/03/19 00:20:13 by bleow            ###   ########.fr       */
+/*   Updated: 2025/03/20 15:04:30 by bleow            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,7 +82,9 @@ t_tokentype get_token_type_basic(const char *str)
 		return (TYPE_SINGLE_QUOTE);
 	else if (ft_strcmp(str, TOKEN_TYPE_HEREDOC) == 0)
 		return (TYPE_HEREDOC);
-	return (TYPE_NULL);
+	else if (ft_strcmp(str, TOKEN_TYPE_PIPE) == 0)
+        return (TYPE_PIPE);
+    return (TYPE_NULL);
 }
 
 /*
