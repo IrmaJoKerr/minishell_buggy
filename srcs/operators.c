@@ -6,7 +6,7 @@
 /*   By: bleow <bleow@student.42kl.edu.my>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/01 21:13:52 by bleow             #+#    #+#             */
-/*   Updated: 2025/03/20 16:31:29 by bleow            ###   ########.fr       */
+/*   Updated: 2025/03/21 07:06:47 by bleow            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,7 @@ Returns:
 - Current position (unchanged).
 Works with operators() for text segment tokenization.
 
-Example: For "echo|grep" at position of '|'
+Example: For "echo | grep" at position of '|'
 - Creates string token "echo" before processing pipe
 - Sets up vars for next token processing
 */
@@ -122,90 +122,29 @@ Example: For '>' character in input
 - Updates position to character after '>'
 - Returns updated position
 */
-/*OLDER VERSION
-
-int	handle_single_operator(char *input, int i, t_vars *vars)
-{
-    if (i > vars->start)
-        handle_string(input, i, vars->start, vars);
-    
-    vars->start = i + 1;
-    vars->curr_type = get_operator_type(input[i]);
-    
-    fprintf(stderr, "DEBUG: Operator '%c' identified as type %d (TYPE_NULL=%d, TYPE_PIPE=%d)\n", 
-            input[i], vars->curr_type, TYPE_NULL, TYPE_PIPE);
-    
-    char op_str[2];
-    op_str[0] = input[i];
-    op_str[1] = '\0';
-    
-    fprintf(stderr, "DEBUG: Creating token with type=%d, value='%s'\n", 
-            vars->curr_type, op_str);
-    
-    maketoken(op_str, vars);
-    
-    return (i + 1);
-}
-NEWER OLD VERSION
-int handle_single_operator(char *input, int i, t_vars *vars)
-{
-    if (i > vars->start)
-        handle_string(input, i, vars->start, vars);
-    
-    vars->start = i + 1;
-    vars->curr_type = get_operator_type(input[i]);
-    
-    fprintf(stderr, "DEBUG: Operator '%c' identified as type=%d (TYPE_PIPE=%d)\n", 
-            input[i], vars->curr_type, TYPE_PIPE);
-            
-    char op_str[2];
-    op_str[0] = input[i];
-    op_str[1] = '\0';
-    maketoken(op_str, vars);
-    
-    fprintf(stderr, "DEBUG: Created operator token: '%c' with type=%d\n", 
-            input[i], vars->curr_type);
-            
-    return (i + 1);
-}
-*/
 int handle_single_operator(char *input, int i, t_vars *vars)
 {
     char *token;
     
-    fprintf(stderr, "DEBUG: handle_single_operator called at pos %d with char '%c'\n", 
-            i, input[i]);
-            
-    // Create token for preceding text if needed
+    // Create token for text before operator if needed
     if (i > vars->start)
-    {
         handle_string(input, i, vars->start, vars);
-        vars->start = i;
-    }
     
-    // Create token for operator
+    // Set proper token type for the operator
+    vars->curr_type = get_operator_type(input[i]);
+    
+    // Create a substring for the operator character
     token = ft_substr(input, i, 1);
     if (!token)
-        return (i);
+        return (i); // Return early if allocation failed
+        
+    // Create operator token with the correct type
+    maketoken(token, vars); // Don't check return value - function is void
     
-    // Explicitly determine operator type
-    if (input[i] == '|')
-    {
-        vars->curr_type = TYPE_PIPE;
-        fprintf(stderr, "DEBUG: Setting pipe operator type to TYPE_PIPE\n");
-    }
-    else if (input[i] == '>')
-        vars->curr_type = TYPE_OUT_REDIRECT;
-    else if (input[i] == '<')
-        vars->curr_type = TYPE_IN_REDIRECT;
-    else
-        vars->curr_type = TYPE_STRING;
+    // Token is freed inside maketoken
     
-    fprintf(stderr, "DEBUG: Creating operator token '%s' with type %d\n", 
-            token, vars->curr_type);
-    
-    maketoken(token, vars);
-    ft_safefree((void **)&token);
+    fprintf(stderr, "DEBUG: Operator '%c' detected and tokenized as type %d\n", 
+            input[i], vars->curr_type);
     
     vars->start = i + 1;
     return (i + 1);
@@ -225,27 +164,6 @@ Example: For ">>" in input
 - Creates TYPE_APPEND_REDIRECT token
 - Updates position to skip both characters
 - Returns position after ">>"
-OLD VERSION
-int	handle_double_operator(char *input, int i, t_vars *vars)
-{
-	if (input[i] == '>' && input[i + 1] == '>')
-	{
-		vars->start = i;
-		vars->pos = i + 2;
-		vars->curr_type = TYPE_APPEND_REDIRECT;
-		maketoken(input, vars);
-		return (i + 2);
-	}
-	if (input[i] == '<' && input[i + 1] == '<')
-	{
-		vars->start = i;
-		vars->pos = i + 2;
-		vars->curr_type = TYPE_HEREDOC;
-		maketoken(input, vars);
-		return (i + 2);
-	}
-	return (i);
-}
 */
 int	handle_double_operator(char *input, int i, t_vars *vars)
 {

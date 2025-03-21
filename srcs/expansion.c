@@ -6,7 +6,7 @@
 /*   By: bleow <bleow@student.42kl.edu.my>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/01 23:01:47 by bleow             #+#    #+#             */
-/*   Updated: 2025/03/19 23:40:06 by bleow            ###   ########.fr       */
+/*   Updated: 2025/03/21 07:50:49 by bleow            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,6 +110,46 @@ char	*get_var_name(char *input, int *pos)
 }
 
 /*
+Appends a single character to a string, freeing the original string.
+- Takes a string and a character to append.
+- Creates a new string with the character added.
+- Frees the original string to prevent memory leaks.
+Returns:
+Newly allocated string with the character appended.
+Empty string with the character if original is NULL.
+Works with expand_cmd_args() during variable expansion.
+*/
+char	*append_char(char *str, char c)
+{
+    char	*result;
+    int		i;
+    
+    // Calculate length of original string
+    i = 0;
+    if (str)
+        i = ft_strlen(str);
+    
+    // Allocate new string with space for original + new char + null terminator
+    result = malloc(i + 2);
+    if (!result)
+        return (NULL);
+    
+    // Copy original string if it exists
+    if (str)
+        ft_strlcpy(result, str, i + 1);
+    
+    // Append the new character and null terminator
+    result[i] = c;
+    result[i + 1] = '\0';
+    
+    // Free the original string
+    ft_safefree((void **)&str);
+    
+    return (result);
+}
+
+
+/*
 Processes environment variable expansion.
 - Checks for $ character at current position.
 - Extracts variable name following the $.
@@ -125,7 +165,7 @@ Example: Input: "$HOME/file" at position 0
 - Extracts "HOME" as variable name
 - Returns value (e.g., "/Users/username")
 - Updates position to 5 (after "HOME")
-*/
+OLD VERSION
 char	*handle_expansion(char *input, int *pos, t_vars *vars)
 {
     char	*var_name;
@@ -145,6 +185,53 @@ char	*handle_expansion(char *input, int *pos, t_vars *vars)
         value = get_env_val(var_name, vars->env);
     ft_safefree((void **)&var_name);
     return (value);
+}
+*/
+/*
+Processes environment variable expansion.
+- Checks for $ character at current position.
+- Extracts variable name following the $.
+- Handles special vars or environment vars.
+- Updates position to after the expanded variable.
+Returns:
+Newly allocated string with expanded value.
+NULL if not a variable or on allocation failure.
+Works with lexerlist() and expand_cmd_args().
+
+Example: Input: "$HOME/file" at position 0
+- Recognizes $ character
+- Extracts "HOME" as variable name
+- Returns value (e.g., "/Users/username")
+*/
+char *handle_expansion(char *input, int *pos, t_vars *vars)
+{
+    char *var_name;
+    char *var_value;
+    
+    // Skip the $ character
+    (*pos)++;
+    
+    // Get variable name
+    var_name = get_var_name(input, pos);
+    if (!var_name)
+        return (ft_strdup("$"));
+    
+    // Check for special variables
+    var_value = handle_special_var(var_name, vars);
+    if (var_value)
+    {
+        ft_safefree((void **)&var_name);
+        return (var_value);
+    }
+    
+    // Get value from environment
+    var_value = get_env_val(var_name, vars->env);
+    ft_safefree((void **)&var_name);
+    
+    // Return expanded value or empty string if not found
+    if (var_value)
+        return (var_value);
+    return (ft_strdup(""));
 }
 
 /*
@@ -178,12 +265,12 @@ Expands all command arguments containing environment variables.
 - Iterates through all arguments in a command node.
 - Replaces arguments starting with $ with their expanded values.
 - Preserves non-variable arguments.
-Works with execute_cmd() and related functions.
+Works with process_cmd_token().
 
 Example: For command node with args ["ls", "$HOME", "-l"]:
 - Expands "$HOME" to "/Users/username"
 - Results in args ["ls", "/Users/username", "-l"]
-*/
+OLDER VERSION
 void	expand_cmd_args(t_node *node, t_vars *vars)
 {
     int		i;
@@ -194,6 +281,53 @@ void	expand_cmd_args(t_node *node, t_vars *vars)
     while (node->args[i])
     {
         expand_one_arg(&(node->args[i]), vars);
+        i++;
+    }
+}
+*/
+/*
+Expands environment variables in command arguments.
+- Processes each argument in a command node.
+- Searches for $ characters and expands variables.
+- Updates arguments with expanded values.
+- Handles quotes properly during expansion.
+Returns:
+Nothing (void function).
+Works with process_cmd_token().
+*/
+void	expand_cmd_args(t_node *node, t_vars *vars)
+{
+    int		i;
+    int		j;
+    char	*expanded;
+    char	*result;
+    
+    if (!node || !node->args)
+        return ;
+    i = 0;
+    while (node->args[i])
+    {
+        j = 0;
+        result = ft_strdup("");
+        while (node->args[i][j])
+        {
+            if (node->args[i][j] == '$')
+            {
+                expanded = handle_expansion(node->args[i], &j, vars);
+                if (expanded)
+                {
+                    result = merge_and_free(result, expanded);
+                    ft_safefree((void **)&expanded);
+                }
+            }
+            else
+            {
+                result = append_char(result, node->args[i][j]);
+                j++;
+            }
+        }
+        ft_safefree((void **)&node->args[i]);
+        node->args[i] = result;
         i++;
     }
 }

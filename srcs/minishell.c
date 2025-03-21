@@ -6,7 +6,7 @@
 /*   By: bleow <bleow@student.42kl.edu.my>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/03 11:31:02 by bleow             #+#    #+#             */
-/*   Updated: 2025/03/20 06:19:27 by bleow            ###   ########.fr       */
+/*   Updated: 2025/03/21 12:06:35 by bleow            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -299,7 +299,7 @@ Example: For input "ls |"
 - Detects unfinished pipe
 - Prompts for continuation
 - Returns completed command with pipe and continuation
-*/
+OLD VERSION
 char	*process_pipe_syntax(char *command, char *orig_cmd, t_vars *vars)
 {
     int		syntax_chk;
@@ -316,6 +316,64 @@ char	*process_pipe_syntax(char *command, char *orig_cmd, t_vars *vars)
         return (NULL);
     }
     processed_cmd = handle_pipe_completion(processed_cmd, vars, syntax_chk);
+    return (processed_cmd);
+}
+*/
+/*
+Handles pipe syntax validation and completion.
+- Checks for pipe syntax errors.
+- Handles unfinished pipes by prompting for continuation.
+Returns:
+- Updated command string after pipe processing.
+- NULL on memory allocation failure or other error.
+*/
+char *process_pipe_syntax(char *command, char *orig_cmd, t_vars *vars)
+{
+    int     syntax_chk;
+    char    *processed_cmd;
+    
+    fprintf(stderr, "DEBUG: [process_pipe_syntax] Starting with command=%p, orig_cmd=%p\n", 
+            (void*)command, (void*)orig_cmd);
+    processed_cmd = command;
+    syntax_chk = chk_pipe_syntax_err(vars);
+    fprintf(stderr, "DEBUG: [process_pipe_syntax] Syntax check result: %d\n", syntax_chk);
+    
+    if (syntax_chk == 1)
+    {
+        fprintf(stderr, "DEBUG: [process_pipe_syntax] Syntax error detected\n");
+        
+        // CRITICAL FIX: Only free memory if it's not shared
+        // Only free processed_cmd if it's different from both orig_cmd and command
+        if (processed_cmd != orig_cmd && processed_cmd != command)
+        {
+            fprintf(stderr, "DEBUG: [process_pipe_syntax] Freeing processed_cmd=%p\n", 
+                   (void*)processed_cmd);
+            ft_safefree((void **)&processed_cmd);
+            fprintf(stderr, "DEBUG: [process_pipe_syntax] After free: processed_cmd=%p\n", 
+                   (void*)processed_cmd);
+        }
+        
+        // Only free orig_cmd if it exists and isn't the same as command
+        // This prevents the double free
+        if (orig_cmd && orig_cmd != command) 
+        {
+            fprintf(stderr, "DEBUG: [process_pipe_syntax] Freeing orig_cmd=%p\n", 
+                (void*)orig_cmd);
+            ft_safefree((void **)&orig_cmd);
+            fprintf(stderr, "DEBUG: [process_pipe_syntax] After free: orig_cmd=%p\n", 
+                (void*)orig_cmd);
+        } else {
+            fprintf(stderr, "DEBUG: [process_pipe_syntax] Not freeing orig_cmd (shared memory)\n");
+        }
+        return (NULL);
+    }
+    
+    fprintf(stderr, "DEBUG: [process_pipe_syntax] Before handle_pipe_completion: processed_cmd=%p\n", 
+           (void*)processed_cmd);
+    processed_cmd = handle_pipe_completion(processed_cmd, vars, syntax_chk);
+    fprintf(stderr, "DEBUG: [process_pipe_syntax] After handle_pipe_completion: processed_cmd=%p\n", 
+           (void*)processed_cmd);
+    
     return (processed_cmd);
 }
 
@@ -349,7 +407,7 @@ int	process_command(char *command, t_vars *vars)
     build_and_execute(vars);
     if (processed_cmd != command)
         ft_safefree((void **)&processed_cmd);
-    ft_safefree((void **)&command);
+    // ft_safefree((void **)&command);
     return (1);
 }
 
@@ -361,7 +419,7 @@ Main entry point for the minishell program.
 Returns:
 0 on normal program exit.
 Works as program entry point.
-*/
+OLD VERSION
 int	main(int ac, char **av, char **envp)
 {
     t_vars	vars;
@@ -382,5 +440,43 @@ int	main(int ac, char **av, char **envp)
         vars.env = NULL;
     }
     cleanup_exit(&vars);
+    return (0);
+}
+*/
+/*
+Main shell loop that processes user commands and manages execution flow.
+- Reads input through reader() function.
+- Handles Ctrl+D and empty input cases.
+- Processes commands through tokenizing and execution.
+- Manages exit status tracking through pipeline.
+Works as the central execution point of the shell.
+*/
+int	main(int argc, char **argv, char **envp)
+{
+    t_vars	vars;
+    char	*input;
+    
+    (void)argc;
+    (void)argv;
+	ft_memset(&vars, 0, sizeof(t_vars));
+    init_shell(&vars, envp);
+    while (1)
+    {
+        input = reader(&vars);
+        if (input == NULL)
+        {
+            fprintf(stderr, "DEBUG: EOF detected, performing cleanup\n");
+            cleanup_exit(&vars);
+            ft_putstr_fd("exit\n", STDOUT_FILENO);
+            exit(vars.error_code);
+        }
+        if (input[0] == '\0')
+        {
+            ft_safefree((void **)&input);
+            continue ;
+        }
+        process_command(input, &vars);
+        ft_safefree((void **)&input);
+    }
     return (0);
 }

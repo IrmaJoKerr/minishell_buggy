@@ -6,7 +6,7 @@
 /*   By: bleow <bleow@student.42kl.edu.my>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/16 02:20:54 by bleow             #+#    #+#             */
-/*   Updated: 2025/03/20 04:09:17 by bleow            ###   ########.fr       */
+/*   Updated: 2025/03/21 04:31:35 by bleow            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,10 +113,11 @@ void	init_lexer(t_vars *vars)
 {
 	if (!vars)
 		return;
-	vars->pos = 0;
-	vars->start = 0;
 	vars->head = NULL;
 	vars->current = NULL;
-	vars->quote_depth = 0;
 	vars->curr_type = TYPE_NULL;
+	vars->prev_type = TYPE_NULL;
+	vars->pos = 0;
+	vars->start = 0;
+	vars->quote_depth = 0;
 }

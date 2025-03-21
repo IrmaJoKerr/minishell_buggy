@@ -6,7 +6,7 @@
 /*   By: bleow <bleow@student.42kl.edu.my>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/10 22:50:26 by lechan            #+#    #+#             */
-/*   Updated: 2025/03/20 05:32:16 by bleow            ###   ########.fr       */
+/*   Updated: 2025/03/21 04:14:07 by bleow            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,32 +114,6 @@ Updates PWD and OLDPWD environment variables after directory change.
 - Temporarily buffers the current working directory path in cwd[].
 - Updates the PWD environment variable with the new path.
 Returns 0 on success, 1 on failure.
-OLD VERSION
-
-int	update_env_pwd(t_vars *vars, char *oldpwd)
-{
-	char	cwd[1024];
-	char	*tmp;
-	int     cmdcode;
-	
-	tmp = ft_strjoin("OLDPWD=", oldpwd);
-	if (!tmp)
-		return (1);
-	modify_env(&vars->env, 1, tmp);
-	ft_safefree((void **)&tmp);
-	cmdcode = getcwd(cwd, sizeof(cwd));
-	if (!cmdcode)
-	{
-		printf("cd: error retrieving current directory\n");
-		return (1);
-	}
-	tmp = ft_strjoin("PWD=", cwd);
-	if (!tmp)
-		return (1);
-	modify_env(&vars->env, 1, tmp);
-	ft_safefree((void **)&tmp);
-	return (0);
-}
 */
 int update_env_pwd(t_vars *vars, char *oldpwd)
 {

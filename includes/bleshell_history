@@ -1,0 +1,27 @@
+| ls
+ls
+ls -l
+ls | grep c
+ls | grep c | wc -l
+ls -l | grep c | wc -l
+cat file.txt | grep cde | sort > output.txt
+ls || grep c
+ls -l || grep c
+ls -l ||| grep c
+ls ||| grep c
+|ls 
+| ls 
+ls ||
+ls |||
+ls -l |||
+ls |
+env | sort | grep -v SHLVL | grep -v ^_
+cat ./test_files/infile_big | grep oi
+ls
+cd includes
+cat minishell.h | grep ");"$
+echo hi |    |  < >>
+echo hi |  < >>   |  |
+echo $
+clear
+echo $

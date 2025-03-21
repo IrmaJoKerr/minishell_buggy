@@ -6,7 +6,7 @@
 /*   By: bleow <bleow@student.42kl.edu.my>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/01 21:36:41 by bleow             #+#    #+#             */
-/*   Updated: 2025/03/20 03:33:40 by bleow            ###   ########.fr       */
+/*   Updated: 2025/03/21 04:18:17 by bleow            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,28 +42,29 @@ After append_arg(node, "-a"), node->args becomes ["ls", "-l", "-a", NULL]
 */
 void	append_arg(t_node *node, char *new_arg)
 {
-	char	**new_args;
-	size_t	len;
-	size_t	i;
+    char	**new_args;
+    size_t	len;
+    size_t	i;
 
-	if (!node || !new_arg || !node->args)
-		return ;
-	len = ft_arrlen(node->args);
-	new_args = malloc(sizeof(char *) * (len + 2));
-	if (!new_args)
-		return ;
-	i = -1;
-	while (++i < len)
-	{
-		new_args[i] = node->args[i];
-		if (!new_args[i])
-		{
-			free(new_args);
-			return ;
-		}
-	}
-	new_args[len] = ft_strdup(new_arg);
-	new_args[len + 1] = NULL;
-	free(node->args);
-	node->args = new_args;
+    if (!node || !new_arg || !node->args)
+        return ;
+    len = ft_arrlen(node->args);
+    new_args = malloc(sizeof(char *) * (len + 2));
+    if (!new_args)
+        return ;
+    i = -1;
+    while (++i < len)
+    {
+        new_args[i] = node->args[i];
+        if (!new_args[i])
+        {
+            free(new_args);
+            return ;
+        }
+    }
+    new_args[len] = ft_strdup(new_arg);
+    new_args[len + 1] = NULL;
+    process_quotes_in_arg(&new_args[len]);
+    free(node->args);
+    node->args = new_args;
 }

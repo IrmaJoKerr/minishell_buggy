@@ -6,7 +6,7 @@
 /*   By: bleow <bleow@student.42kl.edu.my>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/02 06:12:16 by bleow             #+#    #+#             */
-/*   Updated: 2025/03/20 16:30:00 by bleow            ###   ########.fr       */
+/*   Updated: 2025/03/21 09:07:50 by bleow            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,138 +33,177 @@ Works with process_text().
 OLD VERSION
 void maketoken(char *token, t_vars *vars)
 {
-    fprintf(stderr, "DEBUG: maketoken called with token='%s', type=%d\n", 
-            token, vars->curr_type);
-            
-    if (!token || !vars)
-        return;
-        
-    if (vars->curr_type == TYPE_CMD)
-    {
-        process_cmd_token(token, vars);
-        fprintf(stderr, "DEBUG: Command token processed: '%s'\n", token);
-    }
-    else
-    {
-        process_other_token(token, vars);
-        fprintf(stderr, "DEBUG: Other token processed: type=%d, value='%s'\n", 
-                vars->curr_type, token);
-    }
-    
-    // Add debug info about the newly created token
-    if (vars->current)
-        fprintf(stderr, "DEBUG: Token created: type=%d, value='%s'\n", 
-                vars->current->type, 
-                (vars->current->args && vars->current->args[0]) ? 
-                    vars->current->args[0] : "(null)");
+	fprintf(stderr, "DEBUG: maketoken called with token='%s', type=%d\n", 
+			token, vars->curr_type);
+			
+	if (!token || !vars)
+		return;
+		
+	if (vars->curr_type == TYPE_CMD)
+	{
+		process_cmd_token(token, vars);
+		fprintf(stderr, "DEBUG: Command token processed: '%s'\n", token);
+	}
+	else
+	{
+		process_other_token(token, vars);
+		fprintf(stderr, "DEBUG: Other token processed: type=%d, value='%s'\n", 
+				vars->curr_type, token);
+	}
+	
+	// Add debug info about the newly created token
+	if (vars->current)
+		fprintf(stderr, "DEBUG: Token created: type=%d, value='%s'\n", 
+				vars->current->type, 
+				(vars->current->args && vars->current->args[0]) ? 
+					vars->current->args[0] : "(null)");
 }
 */
-// Implement or modify maketoken in tokenize.c
+/*NEWER OLD VERSION
 void maketoken(char *token, t_vars *vars)
 {
-    t_node *node = NULL;
-    
-    fprintf(stderr, "DEBUG: maketoken called with token='%s', type=%d\n", 
-            token, vars->curr_type);
-    
-    // For arguments, append to previous command node
-    if (vars->curr_type == TYPE_ARGS && vars->head)
-    {
-        t_node *cmd_node = find_last_command(vars->head);
-        
-        if (cmd_node)
-        {
-            fprintf(stderr, "DEBUG: Adding argument '%s' to command '%s'\n",
-                    token, cmd_node->args ? cmd_node->args[0] : "(null)");
-            append_arg(cmd_node, token);
-            return;
-        }
-    }
-    
-    // For strings that should be considered arguments to the previous command
-    if (vars->curr_type == TYPE_STRING && vars->current && vars->current->type == TYPE_CMD)
-    {
-        fprintf(stderr, "DEBUG: Converting string '%s' to argument for command '%s'\n",
-                token, vars->current->args ? vars->current->args[0] : "(null)");
-        append_arg(vars->current, token);
-        return;
-    }
-    
-    // For command tokens
-    if (vars->curr_type == TYPE_CMD)
-    {
-        fprintf(stderr, "DEBUG: Command token processed: '%s'\n", token);
-        node = new_cmd_node(token);
-    }
-    // For pipe tokens
-    else if (vars->curr_type == TYPE_PIPE)
-    {
-        fprintf(stderr, "DEBUG: Pipe token processed\n");
-        node = new_other_node(token, TYPE_PIPE);
-    }
-    // For other tokens
-    else
-    {
-        fprintf(stderr, "DEBUG: Other token processed: '%s', type=%d\n", 
-                token, vars->curr_type);
-        
-        // For strings after a pipe, convert to commands
-        if (vars->curr_type == TYPE_STRING && 
-            vars->current && vars->current->type == TYPE_PIPE)
-        {
-            fprintf(stderr, "DEBUG: Converting string after pipe to command\n");
-            vars->curr_type = TYPE_CMD;
-            node = new_cmd_node(token);
-        }
-        else
-        {
-            // Create other token types
-            node = new_other_node(token, vars->curr_type);
-        }
-    }
-    
-    // Add node to list
-    if (node)
-    {
-        if (!vars->head)
-        {
-            vars->head = node;
-            vars->current = node;
-            fprintf(stderr, "DEBUG: Set head token: type=%d, value='%s'\n", 
-                    node->type, token);
-        }
-        else
-        {
-            vars->current->next = node;
-            node->prev = vars->current;
-            vars->current = node;
-            fprintf(stderr, "DEBUG: Added token to list: type=%d, value='%s'\n", 
-                    node->type, token);
-        }
-        
-        fprintf(stderr, "DEBUG: New token added: type=%d, value='%s'\n", 
-                vars->curr_type, token);
-    }
-    else
-    {
-        fprintf(stderr, "DEBUG: Failed to create token for '%s'\n", token);
-    }
+	t_node *node = NULL;
+	
+	fprintf(stderr, "DEBUG: maketoken called with token='%s', type=%d\n", 
+			token, vars->curr_type);
+	
+	// For arguments, append to previous command node
+	if (vars->curr_type == TYPE_ARGS && vars->head)
+	{
+		t_node *cmd_node = find_last_command(vars->head);
+		
+		if (cmd_node)
+		{
+			fprintf(stderr, "DEBUG: Adding argument '%s' to command '%s'\n",
+					token, cmd_node->args ? cmd_node->args[0] : "(null)");
+			append_arg(cmd_node, token);
+			return;
+		}
+	}
+	
+	// For strings that should be considered arguments to the previous command
+	if (vars->curr_type == TYPE_STRING && vars->current && vars->current->type == TYPE_CMD)
+	{
+		fprintf(stderr, "DEBUG: Converting string '%s' to argument for command '%s'\n",
+				token, vars->current->args ? vars->current->args[0] : "(null)");
+		append_arg(vars->current, token);
+		return;
+	}
+	
+	// For command tokens
+	if (vars->curr_type == TYPE_CMD)
+	{
+		fprintf(stderr, "DEBUG: Command token processed: '%s'\n", token);
+		node = new_cmd_node(token);
+	}
+	// For pipe tokens
+	else if (vars->curr_type == TYPE_PIPE)
+	{
+		fprintf(stderr, "DEBUG: Pipe token processed\n");
+		node = new_other_node(token, TYPE_PIPE);
+	}
+	// For other tokens
+	else
+	{
+		fprintf(stderr, "DEBUG: Other token processed: '%s', type=%d\n", 
+				token, vars->curr_type);
+		
+		// For strings after a pipe, convert to commands
+		if (vars->curr_type == TYPE_STRING && 
+			vars->current && vars->current->type == TYPE_PIPE)
+		{
+			fprintf(stderr, "DEBUG: Converting string after pipe to command\n");
+			vars->curr_type = TYPE_CMD;
+			node = new_cmd_node(token);
+		}
+		else
+		{
+			// Create other token types
+			node = new_other_node(token, vars->curr_type);
+		}
+	}
+	
+	// Add node to list
+	if (node)
+	{
+		if (!vars->head)
+		{
+			vars->head = node;
+			vars->current = node;
+			fprintf(stderr, "DEBUG: Set head token: type=%d, value='%s'\n", 
+					node->type, token);
+		}
+		else
+		{
+			vars->current->next = node;
+			node->prev = vars->current;
+			vars->current = node;
+			fprintf(stderr, "DEBUG: Added token to list: type=%d, value='%s'\n", 
+					node->type, token);
+		}
+		
+		fprintf(stderr, "DEBUG: New token added: type=%d, value='%s'\n", 
+				vars->curr_type, token);
+	}
+	else
+	{
+		fprintf(stderr, "DEBUG: Failed to create token for '%s'\n", token);
+	}
+}
+*/
+/*
+Creates a token node and adds it to the token list.
+*/
+void maketoken(char *token, t_vars *vars)
+{
+	t_node *node;
+	
+	if (!token)
+		return;
+		
+	fprintf(stderr, "DEBUG: maketoken called with token='%s', type=%d\n", 
+			token, vars->curr_type);
+			
+	if (vars->curr_type == TYPE_CMD)
+	{
+		fprintf(stderr, "DEBUG: Command token processed: '%s'\n", token);
+		node = make_cmdnode(token);
+		if (!node)
+			return;
+		build_token_linklist(vars, node);
+	}
+	else if (vars->curr_type == TYPE_STRING && vars->current && 
+			 vars->current->type == TYPE_CMD)
+	{
+		fprintf(stderr, "DEBUG: Converting string '%s' to argument for command '%s'\n", 
+				token, vars->current->args[0]);
+		append_arg(vars->current, token);
+		return;  /* Return early since we're just modifying the existing node */
+	}
+	else
+	{
+		fprintf(stderr, "DEBUG: Other token processed: '%s', type=%d\n", token, vars->curr_type);
+		node = initnode(vars->curr_type, token);
+		if (!node)
+			return;
+		build_token_linklist(vars, node);
+	}
 }
 
 // Helper function to find the last command node
 t_node *find_last_command(t_node *head)
 {
-    t_node *current = head;
-    t_node *last_cmd = NULL;
-    
-    while (current)
-    {
-        if (current->type == TYPE_CMD)
-            last_cmd = current;
-        current = current->next;
-    }
-    
-    return last_cmd;
+	t_node *current = head;
+	t_node *last_cmd = NULL;
+	
+	while (current)
+	{
+		if (current->type == TYPE_CMD)
+			last_cmd = current;
+		current = current->next;
+	}
+	
+	return last_cmd;
 }
 
 /*
@@ -179,42 +218,113 @@ Example: For input "echo '$USER'"
 */
 int	handle_expand(t_vars *vars)
 {
-    if (vars->quote_depth == 0)
-        return (1);
-    if (vars->quote_ctx[vars->quote_depth - 1].type == '"')
-        return (1);
-    return (0);
+	if (vars->quote_depth == 0)
+		return (1);
+	if (vars->quote_ctx[vars->quote_depth - 1].type == '"')
+		return (1);
+	return (0);
 }
 
 /*
-Processes special characters like dollar sign.
-- Handles expansion variables if not in single quotes.
-- Updates position and token boundaries.
-- Creates tokens for expanded variables.
+Processes special characters like dollar sign for variable expansion.
+- Detects $ character and expands the following variable name.
+- Creates appropriate tokens with expanded values.
+- Handles integration with the command argument structure.
+- Updates position pointers to continue processing after expansion.
 Returns:
-1 if special char was processed, 0 otherwise.
+- 1 if special char was processed.
+- 0 if not processed.
 Works with process_char() during tokenization.
 
-Example: For input "echo $USER"
-- Detects $ at position
-- Extracts USER as variable name
-- Replaces with expanded value
+Example: For "echo $TEST"
+- Detects $ at position 5
+- Expands TEST to its value (e.g., "123")
+- Adds "123" as argument to "echo" command
+OLD VERSION
+int process_special_char(char *input, int *i, t_vars *vars)
+{
+	char *expanded;
+	
+	// Handle dollar sign ($) for variable expansion
+	if (input[*i] == '$' && handle_expand(vars))
+	{
+		// Process current text segment before the $ if needed
+		if (*i > vars->start)
+			process_text(input, vars, &vars->first_token, TYPE_NULL);
+		
+		// Get expanded value
+		expanded = process_dollar_expansion(input, i, vars);
+		
+		if (expanded)
+		{
+			// Process the expanded token
+			process_expanded_token(expanded, vars);
+			ft_safefree((void **)&expanded);
+			
+			// Update start position for next token
+			vars->start = *i;
+			return (1);
+		}
+	}
+	
+	return (0);
+}
 */
 int	process_special_char(char *input, int *i, t_vars *vars)
 {
-    char	*content;
-
-    if (input[*i] == '$' && handle_expand(vars))
-    {
-        content = handle_expansion(input, i, vars);
-        if (content)
-        {
-            maketoken(content, vars);
-            ft_safefree((void **)&content);
-            return (1);
-        }
-    }
-    return (0);
+	char	*expanded;
+	char	*var_name;
+	int		pos;
+	int		first_token;
+	
+	// Handle dollar sign ($) for variable expansion
+	if (input[*i] == '$' && handle_expand(vars))
+	{
+		// Process text segment before the $ if needed
+		first_token = 0;
+		if (*i > vars->start)
+			process_text(input, vars, &first_token, TYPE_NULL);
+		// Save position for expansion processing
+		pos = *i;
+		// Skip the $ character
+		pos++;
+		// Get variable name (will update pos)
+		var_name = get_var_name(input, &pos);
+		fprintf(stderr, "DEBUG: Found variable name: '%s'\n", var_name ? var_name : "NULL");
+		// Get the expanded value
+		if (var_name && ft_strcmp(var_name, "?") == 0)
+			expanded = chk_exitstatus(vars);
+		else
+			expanded = get_env_val(var_name, vars->env);
+		fprintf(stderr, "DEBUG: Expanded value: '%s'\n", expanded ? expanded : "NULL");
+		// Free variable name
+		ft_safefree((void **)&var_name);
+		// Process the expanded value
+		if (expanded)
+		{
+			// Create token if we have content
+			maketoken(expanded, vars);
+			fprintf(stderr, "DEBUG: Created token from expanded value: '%s'\n", expanded);
+			
+			// Update position past the expanded variable
+			*i = pos;
+			vars->start = pos;
+			// Free expanded value
+			ft_safefree((void **)&expanded);
+			return (1);
+		}
+		else
+		{
+			// For undefined variables, create an empty token
+			maketoken("", vars);
+			fprintf(stderr, "DEBUG: Created empty token for undefined variable\n");
+			// Update position
+			*i = pos;
+			vars->start = pos;
+			return (1);
+		}
+	}
+	return (0);
 }
 
 /*
@@ -233,14 +343,14 @@ Example: For input "echo $HOME"
 */
 int	process_expand_char(char *input, int *i, t_vars *vars)
 {
-    if (input[*i] == '$')
-    {
-        if (process_special_char(input, i, vars))
-            return (1);
-        (*i)++;
-        return (1);
-    }
-    return (0);
+	if (input[*i] == '$')
+	{
+		if (process_special_char(input, i, vars))
+			return (1);
+		(*i)++;
+		return (1);
+	}
+	return (0);
 }
 
 /*
@@ -259,24 +369,24 @@ Example: For input with quotes like "echo 'hello'"
 */
 int process_quote_char(char *input, int *i, t_vars *vars)
 {
-    char	*content;
+	char	*content;
 
-    if (input[*i] == '\'' || input[*i] == '\"')
-    {
-        handle_quotes(input, i, vars);
-        if (vars->quote_depth > 0)
-        {
-            content = read_quoted_content(input, i,
-                    vars->quote_ctx[vars->quote_depth - 1].type);
-            if (content)
-            {
-                maketoken(content, vars);
-                ft_safefree((void **)&content);
-            }
-        }
-        return (1);
-    }
-    return (0);
+	if (input[*i] == '\'' || input[*i] == '\"')
+	{
+		handle_quotes(input, i, vars);
+		if (vars->quote_depth > 0)
+		{
+			content = read_quoted_content(input, i,
+					vars->quote_ctx[vars->quote_depth - 1].type);
+			if (content)
+			{
+				maketoken(content, vars);
+				ft_safefree((void **)&content);
+			}
+		}
+		return (1);
+	}
+	return (0);
 }
 
 /*
@@ -295,12 +405,12 @@ Example: For input with operator like "cmd > file"
 */
 int process_operator_char(char *input, int *i, t_vars *vars)
 {
-    if (is_redirection(classify(input, *i)))
-    {
-        handle_redirection(input, i, vars);
-        return (1);
-    }
-    return (0);
+	if (is_redirection(classify(input, *i)))
+	{
+		handle_redirection(input, i, vars);
+		return (1);
+	}
+	return (0);
 }
 
 /*
@@ -320,17 +430,17 @@ Example: For input "echo hello"
 */
 void process_char(char *input, int *i, t_vars *vars)
 {
-    if (!input || !i || !vars)
-        return ;
-    if (*i == 0 || ft_isspace(input[*i - 1]))
-        vars->start = *i;
-    if (process_quote_char(input, i, vars))
-        return ;
-    if (process_expand_char(input, i, vars))
-        return ;
-    if (process_operator_char(input, i, vars))
-        return ;
-    (*i)++;
+	if (!input || !i || !vars)
+		return ;
+	if (*i == 0 || ft_isspace(input[*i - 1]))
+		vars->start = *i;
+	if (process_quote_char(input, i, vars))
+		return ;
+	if (process_expand_char(input, i, vars))
+		return ;
+	if (process_operator_char(input, i, vars))
+		return ;
+	(*i)++;
 }
 
 /*
@@ -349,17 +459,17 @@ Example: For input "echo 'hello world'"
 */
 int scan_quote_position(char *str, int *pos, char quote_char)
 {
-    int start;
+	int start;
 
-    start = *pos;
-    (*pos)++;
-    while (str[*pos])
-    {
-        if (str[*pos] == quote_char)
-            break ;
-        (*pos)++;
-    }
-    return start;
+	start = *pos;
+	(*pos)++;
+	while (str[*pos])
+	{
+		if (str[*pos] == quote_char)
+			break ;
+		(*pos)++;
+	}
+	return start;
 }
 
 /*
@@ -385,18 +495,18 @@ Works with handle_quote_token() for token creation.
 */
 void	create_quote_token(char *str, t_vars *vars, int *pos, int start)
 {
-    char	quote_char;
+	char	quote_char;
 
-    quote_char = str[start];
-    (*pos)++;
-    vars->start = start;
-    
-    if (quote_char == '"')
-        vars->curr_type = TYPE_DOUBLE_QUOTE;
-    else
-        vars->curr_type = TYPE_SINGLE_QUOTE;
-    maketoken(str, vars);
-    vars->start = *pos;
+	quote_char = str[start];
+	(*pos)++;
+	vars->start = start;
+	
+	if (quote_char == '"')
+		vars->curr_type = TYPE_DOUBLE_QUOTE;
+	else
+		vars->curr_type = TYPE_SINGLE_QUOTE;
+	maketoken(str, vars);
+	vars->start = *pos;
 }
 
 /*
@@ -412,25 +522,59 @@ Example: For input "echo "hello world""
 - Extracts "hello world" as content
 - Creates token for quoted content
 - Updates position past closing quote
+OLD VERSION
+void	handle_quote_token(char *str, t_vars *vars, int *pos)
+{
+	char       quote_char;
+	int        start;
+
+	if (!str || !vars || !pos)
+		return ;
+	quote_char = str[*pos];
+	start = scan_quote_position(str, pos, quote_char);
+	if (str[*pos] == quote_char)
+	{
+		create_quote_token(str, vars, pos, start);
+	}
+	else
+	{
+		vars->quote_depth++;
+		vars->quote_ctx[vars->quote_depth - 1].type = quote_char;
+	}
+}
 */
 void	handle_quote_token(char *str, t_vars *vars, int *pos)
 {
-    char       quote_char;
-    int        start;
+	char       quote_char;
+	int        start;
 
-    if (!str || !vars || !pos)
-        return ;
-    quote_char = str[*pos];
-    start = scan_quote_position(str, pos, quote_char);
-    if (str[*pos] == quote_char)
-    {
-        create_quote_token(str, vars, pos, start);
-    }
-    else
-    {
-        vars->quote_depth++;
-        vars->quote_ctx[vars->quote_depth - 1].type = quote_char;
-    }
+	if (!str || !vars || !pos)
+		return ;
+	quote_char = str[*pos];
+	start = *pos;
+	(*pos)++;
+	while (str[*pos] && str[*pos] != quote_char)
+		(*pos)++;
+	if (str[*pos] == quote_char)
+	{
+		(*pos)++;
+		vars->start = start;
+		if (quote_char == '"')
+			vars->curr_type = TYPE_DOUBLE_QUOTE;
+		else
+			vars->curr_type = TYPE_SINGLE_QUOTE;
+		fprintf(stderr, "DEBUG: Found balanced quotes: '%.*s'\n", 
+				*pos - start, str + start);
+		maketoken(str, vars);
+		vars->start = *pos;
+	}
+	else
+	{
+		vars->quote_depth++;
+		vars->quote_ctx[vars->quote_depth - 1].type = quote_char;
+		fprintf(stderr, "DEBUG: Unclosed %s quote found (depth: %d)\n",
+				(quote_char == '"' ? "double" : "single"), vars->quote_depth);
+	}
 }
 
 /*
@@ -447,35 +591,35 @@ Example: For input "echo hello"
 OLD VERSION
 void	process_char(char *input, int *i, t_vars *vars)
 {
-    char	*content;
+	char	*content;
 
-    if (!input || !i || !vars)
-        return ;
-    if (*i == 0 || ft_isspace(input[*i - 1]))
-        vars->start = *i;
-    if (input[*i] == '\'' || input[*i] == '\"')
-    {
-        handle_quotes(input, i, vars);
-        if (vars->quote_depth > 0)
-        {
-            content = read_quoted_content(input, i,
-                    vars->quote_ctx[vars->quote_depth - 1].type);
-            if (content)
-            {
-                maketoken(content, vars);
-                ft_safefree((void **)&content);
-            }
-        }
-        return ;
-    }
-    if (process_expand_char(input, i, vars))
-        return ;
-    if (is_redirection(classify(input, *i)))
-    {
-        handle_redirection(input, i, vars);
-        return ;
-    }
-    (*i)++;
+	if (!input || !i || !vars)
+		return ;
+	if (*i == 0 || ft_isspace(input[*i - 1]))
+		vars->start = *i;
+	if (input[*i] == '\'' || input[*i] == '\"')
+	{
+		handle_quotes(input, i, vars);
+		if (vars->quote_depth > 0)
+		{
+			content = read_quoted_content(input, i,
+					vars->quote_ctx[vars->quote_depth - 1].type);
+			if (content)
+			{
+				maketoken(content, vars);
+				ft_safefree((void **)&content);
+			}
+		}
+		return ;
+	}
+	if (process_expand_char(input, i, vars))
+		return ;
+	if (is_redirection(classify(input, *i)))
+	{
+		handle_redirection(input, i, vars);
+		return ;
+	}
+	(*i)++;
 }
 */
 
@@ -493,12 +637,12 @@ Example: For input "cat > file.txt"
 */
 void	handle_redirection(char *input, int *i, t_vars *vars)
 {
-    int	pos;
-    int	result;
+	int	pos;
+	int	result;
 
-    pos = *i;
-    result = operators(input, pos, vars->start, vars);
-    *i = result;
+	pos = *i;
+	result = operators(input, pos, vars->start, vars);
+	*i = result;
 }
 
 /*
@@ -517,12 +661,12 @@ Example: For input "echo hello | grep world"
 */
 void	tokenize(char *input, t_vars *vars)
 {
-    int	i;
+	int	i;
 
-    i = 0;
-    vars->start = 0;
-    while (input[i])
-        process_char(input, &i, vars);
+	i = 0;
+	vars->start = 0;
+	while (input[i])
+		process_char(input, &i, vars);
 }
 
 /*
@@ -539,22 +683,22 @@ Example: For pipe operator "|"
 OLD VERSION
 void	process_other_token(char *input, t_vars *vars)
 {
-    char	*token;
-    t_node	*node;
+	char	*token;
+	t_node	*node;
 
-    if (vars->pos <= vars->start)
-        return ;
-    token = ft_substr(input, vars->start, vars->pos - vars->start);
-    if (!token)
-        return ;
-    if (vars->curr_type == TYPE_ARGS)
-        node = new_cmd_node(token);
-    else
-        node = new_other_node(token, vars->curr_type);
-    ft_safefree((void **)&token);
-    if (!node)
-        return ;
-    build_token_linklist(vars, node);
+	if (vars->pos <= vars->start)
+		return ;
+	token = ft_substr(input, vars->start, vars->pos - vars->start);
+	if (!token)
+		return ;
+	if (vars->curr_type == TYPE_ARGS)
+		node = new_cmd_node(token);
+	else
+		node = new_other_node(token, vars->curr_type);
+	ft_safefree((void **)&token);
+	if (!node)
+		return ;
+	build_token_linklist(vars, node);
 }
 */
 /*
@@ -566,75 +710,75 @@ Works with maketoken().
 OLD VERSION
 void process_other_token(char *token, t_vars *vars)
 {
-    int created_node;
-    
-    created_node = 0;
-    
-    // If it's an argument, append it to the previous command
-    if (vars->curr_type == TYPE_ARGS && vars->current && 
-        vars->current->type == TYPE_CMD)
-    {
-        fprintf(stderr, "DEBUG: Appending argument '%s' to command\n", token);
-        append_arg(vars->current, token);
-    }
-    // Otherwise create a new node
-    else
-    {
-        // Create the token node
-        created_node = makenode(vars, token);
-        
-        // Initialize linked list if this is the first token
-        if (created_node && !vars->head)
-            vars->head = vars->current;
-    }
-    
-    fprintf(stderr, "DEBUG: Token processed: type=%d, value=%s\n", 
-            vars->curr_type, token);
+	int created_node;
+	
+	created_node = 0;
+	
+	// If it's an argument, append it to the previous command
+	if (vars->curr_type == TYPE_ARGS && vars->current && 
+		vars->current->type == TYPE_CMD)
+	{
+		fprintf(stderr, "DEBUG: Appending argument '%s' to command\n", token);
+		append_arg(vars->current, token);
+	}
+	// Otherwise create a new node
+	else
+	{
+		// Create the token node
+		created_node = makenode(vars, token);
+		
+		// Initialize linked list if this is the first token
+		if (created_node && !vars->head)
+			vars->head = vars->current;
+	}
+	
+	fprintf(stderr, "DEBUG: Token processed: type=%d, value=%s\n", 
+			vars->curr_type, token);
 }
 */
 void process_other_token(char *token, t_vars *vars)
 {
-    t_node *node = NULL;
-    
-    fprintf(stderr, "DEBUG: process_other_token called with token='%s', type=%d\n", 
-            token, vars->curr_type);
-            
-    if (!token || !vars)
-        return;
-    
-    // For pipe tokens, ensure proper type is set
-    if (strcmp(token, "|") == 0)
-    {
-        fprintf(stderr, "DEBUG: Forcing pipe token type to TYPE_PIPE\n");
-        vars->curr_type = TYPE_PIPE;
-    }
-    
-    // Create the appropriate node
-    node = new_other_node(token, vars->curr_type);
-    if (!node)
-    {
-        fprintf(stderr, "DEBUG: Failed to create node for token '%s'\n", token);
-        return;
-    }
-    
-    // Add to token list
-    if (!vars->head)
-    {
-        vars->head = node;
-        vars->current = node;
-        fprintf(stderr, "DEBUG: Set head token: type=%d, value='%s'\n", 
-                node->type, token);
-    }
-    else
-    {
-        vars->current->next = node;
-        node->prev = vars->current;
-        vars->current = node;
-        fprintf(stderr, "DEBUG: Added token to list: type=%d, value='%s'\n", 
-                node->type, token);
-    }
-    
-    fprintf(stderr, "DEBUG: Other token node created: type=%d\n", node->type);
+	t_node *node = NULL;
+	
+	fprintf(stderr, "DEBUG: process_other_token called with token='%s', type=%d\n", 
+			token, vars->curr_type);
+			
+	if (!token || !vars)
+		return;
+	
+	// For pipe tokens, ensure proper type is set
+	if (strcmp(token, "|") == 0)
+	{
+		fprintf(stderr, "DEBUG: Forcing pipe token type to TYPE_PIPE\n");
+		vars->curr_type = TYPE_PIPE;
+	}
+	
+	// Create the appropriate node
+	node = new_other_node(token, vars->curr_type);
+	if (!node)
+	{
+		fprintf(stderr, "DEBUG: Failed to create node for token '%s'\n", token);
+		return;
+	}
+	
+	// Add to token list
+	if (!vars->head)
+	{
+		vars->head = node;
+		vars->current = node;
+		fprintf(stderr, "DEBUG: Set head token: type=%d, value='%s'\n", 
+				node->type, token);
+	}
+	else
+	{
+		vars->current->next = node;
+		node->prev = vars->current;
+		vars->current = node;
+		fprintf(stderr, "DEBUG: Added token to list: type=%d, value='%s'\n", 
+				node->type, token);
+	}
+	
+	fprintf(stderr, "DEBUG: Other token node created: type=%d\n", node->type);
 }
 
 /*
@@ -650,29 +794,64 @@ Example: For command "echo"
 - Creates node with TYPE_CMD type
 - Sets args[0] to "echo"
 - Returns node pointer
+OLDER VERSION
+t_node	*make_cmdnode(char *token)
+{
+	t_node	*node;
+
+	node = initnode(TYPE_CMD, token);
+	if (!node)
+		return (NULL);
+	node->args = malloc(sizeof(char *) * 2);
+	if (!node->args)
+	{
+		ft_safefree((void **)&node);
+		return (NULL);
+	}
+	node->args[0] = ft_strdup(token);
+	if (!node->args[0])
+	{
+		ft_safefree((void **)&node->args);
+		ft_safefree((void **)&node);
+		return (NULL);
+	}
+	node->args[1] = NULL;
+	return (node);
+}
 */
 t_node	*make_cmdnode(char *token)
 {
-    t_node	*node;
+	t_node	*node;
 
-    node = initnode(TYPE_CMD, token);
-    if (!node)
-        return (NULL);
-    node->args = malloc(sizeof(char *) * 2);
-    if (!node->args)
-    {
-        ft_safefree((void **)&node);
-        return (NULL);
-    }
-    node->args[0] = ft_strdup(token);
-    if (!node->args[0])
-    {
-        ft_safefree((void **)&node->args);
-        ft_safefree((void **)&node);
-        return (NULL);
-    }
-    node->args[1] = NULL;
-    return (node);
+	fprintf(stderr, "DEBUG: [make_cmdnode] Creating command node for '%s'\n", token);
+	node = initnode(TYPE_CMD, token);
+	if (!node)
+		return (NULL);
+	if (node->args)
+	{
+		fprintf(stderr, "DEBUG: [make_cmdnode] Cleaning up existing args\n");
+		if (node->args[0])
+			ft_safefree((void **)&node->args[0]);
+		ft_safefree((void **)&node->args);
+	}
+	node->args = malloc(sizeof(char *) * 2);
+	if (!node->args)
+	{
+		fprintf(stderr, "DEBUG: [make_cmdnode] Failed to allocate args array\n");
+		ft_safefree((void **)&node);
+		return (NULL);
+	}
+	node->args[0] = ft_strdup(token);
+	if (!node->args[0])
+	{
+		fprintf(stderr, "DEBUG: [make_cmdnode] Failed to duplicate token\n");
+		ft_safefree((void **)&node->args);
+		ft_safefree((void **)&node);
+		return (NULL);
+	}
+	node->args[1] = NULL;
+	fprintf(stderr, "DEBUG: [make_cmdnode] Successfully created command node\n");
+	return (node);
 }
 
 /*
@@ -690,15 +869,15 @@ Example: For command token "grep"
 */
 t_node	*new_cmd_node(char *token)
 {
-    t_node	*node;
+	t_node	*node;
 
-    node = make_cmdnode(token);
-    if (!node)
-    {
-        ft_safefree((void **)&token);
-        return (NULL);
-    }
-    return (node);
+	node = make_cmdnode(token);
+	if (!node)
+	{
+		ft_safefree((void **)&token);
+		return (NULL);
+	}
+	return (node);
 }
 
 /*
@@ -715,15 +894,15 @@ Example: For redirect token ">"
 */
 t_node	*new_other_node(char *token, t_tokentype type)
 {
-    t_node	*node;
+	t_node	*node;
 
-    node = initnode(type, token);
-    if (!node)
-    {
-        ft_safefree((void **)&token);
-        return (NULL);
-    }
-    return (node);
+	node = initnode(type, token);
+	if (!node)
+	{
+		ft_safefree((void **)&token);
+		return (NULL);
+	}
+	return (node);
 }
 
 /*
@@ -740,17 +919,17 @@ Example: When adding command node
 */
 void build_token_linklist(t_vars *vars, t_node *node)
 {
-    if (!vars->head)
-    {
-        vars->head = node;
-        vars->current = node;
-    }
-    else
-    {
-        vars->current->next = node;
-        node->prev = vars->current;
-        vars->current = node;
-    }
+	if (!vars->head)
+	{
+		vars->head = node;
+		vars->current = node;
+	}
+	else
+	{
+		vars->current->next = node;
+		node->prev = vars->current;
+		vars->current = node;
+	}
 }
 
 /*
@@ -768,30 +947,30 @@ Example: For input "echo hello world"
 */
 void process_cmd_token(char *input, t_vars *vars)
 {
-    char	**args;
-    t_node	*node;
-    int		i;
+	char	**args;
+	t_node	*node;
+	int		i;
 
-    args = ft_splitstr(input, " \t\n\v\f\r");
-    if (!args)
-        return ;
-    i = 0;
-    while (args[i])
-    {
-        process_quotes_in_arg(&args[i]);
-        if (is_flag_arg(args, i))
-        {
-            join_flag_args(args, i);
-        }
-        i++;
-    }
-    if (args[0])
-    {
-        node = build_cmdarg_node(args);
-        if (node)
-            build_token_linklist(vars, node);
-    }
-    ft_free_2d(args, ft_arrlen(args));
+	args = ft_splitstr(input, " \t\n\v\f\r");
+	if (!args)
+		return ;
+	i = 0;
+	while (args[i])
+	{
+		process_quotes_in_arg(&args[i]);
+		if (is_flag_arg(args, i))
+		{
+			join_flag_args(args, i);
+		}
+		i++;
+	}
+	if (args[0])
+	{
+		node = build_cmdarg_node(args);
+		if (node)
+			build_token_linklist(vars, node);
+	}
+	ft_free_2d(args, ft_arrlen(args));
 }
 
 /*
@@ -809,12 +988,12 @@ Example: For arguments ["ls", "-", "l"]
 */
 int is_flag_arg(char **args, int i)
 {
-    if (i > 0 && args[i][0] == '-' && ft_strlen(args[i]) == 1 
-        && args[i+1] && ft_isalpha(args[i+1][0]))
-    {
-        return (1);
-    }
-    return (0);
+	if (i > 0 && args[i][0] == '-' && ft_strlen(args[i]) == 1 
+		&& args[i+1] && ft_isalpha(args[i+1][0]))
+	{
+		return (1);
+	}
+	return (0);
 }
 
 /*
@@ -831,24 +1010,24 @@ Example: For arguments ["ls", "-", "l", "a"]
 */
 void join_flag_args(char **args, int i)
 {
-    char	*combined;
-    int		j;
+	char	*combined;
+	int		j;
 
-    combined = ft_strjoin(args[i], args[i+1]);
-    if (combined)
-    {
-        ft_safefree((void **)&args[i]);
-        ft_safefree((void **)&args[i+1]);
-        args[i] = combined;
-        
-        j = i + 1;
-        while (args[j+1])
-        {
-            args[j] = args[j+1];
-            j++;
-        }
-        args[j] = NULL;
-    }
+	combined = ft_strjoin(args[i], args[i+1]);
+	if (combined)
+	{
+		ft_safefree((void **)&args[i]);
+		ft_safefree((void **)&args[i+1]);
+		args[i] = combined;
+		
+		j = i + 1;
+		while (args[j+1])
+		{
+			args[j] = args[j+1];
+			j++;
+		}
+		args[j] = NULL;
+	}
 }
 
 /*
@@ -867,22 +1046,22 @@ Example: For arguments ["grep", "pattern", "file"]
 */
 t_node *build_cmdarg_node(char **args)
 {
-    t_node	*node;
-    int		i;
-     
-    if (!args || !args[0])
-        return (NULL);
-    node = new_cmd_node(args[0]);
-    if (!node)
-        return (NULL);
-    
-    i = 1;
-    while (args[i])
-    {
-        append_arg(node, args[i]);
-        i++;
-    }
-    return (node);
+	t_node	*node;
+	int		i;
+	 
+	if (!args || !args[0])
+		return (NULL);
+	node = new_cmd_node(args[0]);
+	if (!node)
+		return (NULL);
+	
+	i = 1;
+	while (args[i])
+	{
+		append_arg(node, args[i]);
+		i++;
+	}
+	return (node);
 }
 
 /*
@@ -897,14 +1076,14 @@ Example: For arguments ["'hello'", "\"world\""]
 */
 void process_args_tokens(char **args)
 {
-    int	i;
+	int	i;
 
-    i = 0;
-    while (args[i])
-    {
-        process_quotes_in_arg(&args[i]);
-        i++;
-    }
+	i = 0;
+	while (args[i])
+	{
+		process_quotes_in_arg(&args[i]);
+		i++;
+	}
 }
 
 /*
@@ -923,38 +1102,38 @@ Example: For input "echo "hello world""
 OLD VERSION
 void handle_quote_token(char *str, t_vars *vars, int *pos)
 {
-    char		quote_char;
-    int			start;
-    t_tokentype	quote_type;
+	char		quote_char;
+	int			start;
+	t_tokentype	quote_type;
 
-    if (!str || !vars || !pos)
-        return ;
-    quote_char = str[*pos];
-    if (quote_char == '"')
-        quote_type = TYPE_DOUBLE_QUOTE;
-    else
-        quote_type = TYPE_SINGLE_QUOTE;
-    start = *pos;
-    (*pos)++;
-    while (str[*pos])
-    {
-        if (str[*pos] == quote_char)
-            break ;
-        (*pos)++;
-    }
-    if (str[*pos] == quote_char)
-    {
-        (*pos)++;
-        vars->start = start;
-        vars->curr_type = quote_type;
-        maketoken(str, vars);
-        vars->start = *pos;
-    }
-    else
-    {
-        vars->quote_depth++;
-        vars->quote_ctx[vars->quote_depth - 1].type = quote_char;
-    }
+	if (!str || !vars || !pos)
+		return ;
+	quote_char = str[*pos];
+	if (quote_char == '"')
+		quote_type = TYPE_DOUBLE_QUOTE;
+	else
+		quote_type = TYPE_SINGLE_QUOTE;
+	start = *pos;
+	(*pos)++;
+	while (str[*pos])
+	{
+		if (str[*pos] == quote_char)
+			break ;
+		(*pos)++;
+	}
+	if (str[*pos] == quote_char)
+	{
+		(*pos)++;
+		vars->start = start;
+		vars->curr_type = quote_type;
+		maketoken(str, vars);
+		vars->start = *pos;
+	}
+	else
+	{
+		vars->quote_depth++;
+		vars->quote_ctx[vars->quote_depth - 1].type = quote_char;
+	}
 }
 */
 
